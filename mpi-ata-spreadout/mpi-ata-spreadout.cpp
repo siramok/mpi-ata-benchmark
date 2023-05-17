@@ -8,7 +8,7 @@
 #include "../common/error-catch.cpp"
 #include "../common/spreadout.cpp"
 
-// Distribute each process rank using MPI_Alltoall
+// Distribute each process rank using spreadout
 int main(int argc, char **argv)
 {
 
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
         send_data[j] = rank % 64;
         recv_data[j] = 0;
       }
-      MPICHECK(MPI_Alltoall(send_data, count, MPI_CHAR, recv_data, count, MPI_CHAR, MPI_COMM_WORLD));
+      spreadout_alltoall(send_data, count, MPI_CHAR, recv_data, count, MPI_CHAR, MPI_COMM_WORLD);
     }
   }
 
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
 
       // Perform all to all
       auto start = std::chrono::high_resolution_clock::now();
-      MPICHECK(MPI_Alltoall(send_data, count, MPI_CHAR, recv_data, count, MPI_CHAR, MPI_COMM_WORLD));
+      spreadout_alltoall(send_data, count, MPI_CHAR, recv_data, count, MPI_CHAR, MPI_COMM_WORLD);
       auto stop = std::chrono::high_resolution_clock::now();
 
       // Compute elapsed time
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 
       std::ofstream log;
       log.open("run.log", std::ios_base::app);
-      log << "[MPI_Alltoall] " << size << " processes sending " << count << " bytes each: " << average << " us avg of " << num_executions << " executions" << std::endl;
+      log << "[MPI Spreadout] " << size << " processes sending " << count << " bytes each: " << average << " us avg of " << num_executions << " executions" << std::endl;
       log.close();
     }
 
