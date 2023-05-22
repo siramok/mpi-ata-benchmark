@@ -27,6 +27,8 @@ int main(int argc, char **argv)
   char *send_data;
   char *recv_data;
 
+  const int radix = 2;
+
   // Warm-up loop
   for (int count = start_bytes; count <= stop_bytes; count *= 2)
   {
@@ -41,7 +43,7 @@ int main(int argc, char **argv)
         send_data[j] = rank % 64;
         recv_data[j] = 0;
       }
-      uniform_radix_r_bruck(2, (char *)send_data, count, MPI_CHAR, (char *)recv_data, count, MPI_CHAR, MPI_COMM_WORLD);
+      uniform_radix_r_bruck(radix, (char *)send_data, count, MPI_CHAR, (char *)recv_data, count, MPI_CHAR, MPI_COMM_WORLD);
     }
   }
 
@@ -67,7 +69,7 @@ int main(int argc, char **argv)
 
       // Perform all to all
       auto start = std::chrono::high_resolution_clock::now();
-      uniform_radix_r_bruck(2, (char *)send_data, count, MPI_CHAR, (char *)recv_data, count, MPI_CHAR, MPI_COMM_WORLD);
+      uniform_radix_r_bruck(radix, (char *)send_data, count, MPI_CHAR, (char *)recv_data, count, MPI_CHAR, MPI_COMM_WORLD);
       auto stop = std::chrono::high_resolution_clock::now();
 
       // Compute elapsed time
@@ -95,7 +97,7 @@ int main(int argc, char **argv)
 
       std::ofstream log;
       log.open("run.log", std::ios_base::app);
-      log << "[MPI Bruck] " << size << " processes sending " << count << " bytes each: " << average << " us avg of " << num_executions << " executions" << std::endl;
+      log << "[MPI Bruck w/ r=2] " << size << " processes sending " << count << " bytes each: " << average << " us avg of " << num_executions << " executions" << std::endl;
       log.close();
     }
 
