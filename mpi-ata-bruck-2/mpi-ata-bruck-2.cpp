@@ -48,7 +48,7 @@ int main(int argc, char **argv)
   }
 
   // Benchmark loop
-  const int num_executions = 1000;
+  const int num_executions = 25;
   for (int count = start_bytes; count <= stop_bytes; count *= 2)
   {
     // Send and recieve buffers must be the same size
