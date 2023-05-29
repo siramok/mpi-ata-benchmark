@@ -1,13 +1,17 @@
 #!/bin/bash
 
 NODES=`wc -l < $PBS_NODEFILE`
-let RANKS=4*$NODES
+let N=`nproc`
+let PPN=$(( N / 2 ))
 
-cd mpi-ata
-mpiexec -n $RANKS -ppn 4 ./mpi-ata.out
+while [ $PPN -ge 2 ]
+do
+    let RANKS=$PPN*$NODES
 
-cd ../mpi-ata-bruck-2
-mpiexec -n $RANKS -ppn 4 ./mpi-ata-bruck-2.out
+    mpiexec -n $RANKS -ppn $PPN ./alltoall/alltoall.out $NODES $PPN
+    mpiexec -n $RANKS -ppn $PPN ./spreadout/spreadout.out $NODES $PPN
+    mpiexec -n $RANKS -ppn $PPN ./bruck2/bruck2.out $NODES $PPN
+    mpiexec -n $RANKS -ppn $PPN ./brucksqrt/brucksqrt.out $NODES $PPN
 
-cd ../mpi-ata-bruck-sqrt
-mpiexec -n $RANKS -ppn 4 ./mpi-ata-bruck-sqrt.out
+    PPN=$(( PPN / 2 ))
+done

@@ -1,4 +1,4 @@
-TARGET = mpi-atav
+TARGET = spreadout
 COMMON = ../common
 SRC = $(TARGET).cpp
 

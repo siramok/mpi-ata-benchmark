@@ -1,17 +1,13 @@
 .PHONY : all
 
 all:
-	$(MAKE) -C mpi-ata
-	# $(MAKE) -C mpi-atav
-	$(MAKE) -C mpi-ata-bruck-2
-	$(MAKE) -C mpi-ata-bruck-sqrt
-	# $(MAKE) -C mpi-ata-bruckv
-	# $(MAKE) -C mpi-ata-spreadout
+	$(MAKE) -C alltoall
+	$(MAKE) -C bruck2
+	$(MAKE) -C brucksqrt
+	$(MAKE) -C spreadout
 
 clean:
-	$(MAKE) -C mpi-ata clean
-	# $(MAKE) -C mpi-atav clean
-	$(MAKE) -C mpi-ata-bruck-2 clean
-	$(MAKE) -C mpi-ata-bruck-sqrt clean
-	# $(MAKE) -C mpi-ata-bruckv clean
-	# $(MAKE) -C mpi-ata-spreadout clean
+	$(MAKE) -C alltoall clean
+	$(MAKE) -C bruck2 clean
+	$(MAKE) -C brucksqrt clean
+	$(MAKE) -C spreadout clean

@@ -1,4 +1,5 @@
 #include <chrono>
+#include <sstream>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -6,11 +7,14 @@
 #include <mpi.h>
 
 #include "../common/error-catch.cpp"
-#include "../common/twophase.cpp"
+#include "../common/spreadout.cpp"
 
-// Distribute each process rank using MPI_Alltoallv
+// Distribute each process rank using spreadout
 int main(int argc, char **argv)
 {
+
+  int nodes = atoi(argv[1]);
+  int ppn = atoi(argv[2]);
 
   // Initialize MPI
   MPICHECK(MPI_Init(&argc, &argv));
@@ -22,57 +26,50 @@ int main(int argc, char **argv)
   MPICHECK(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
 
   const int start_bytes = 16;
-  const int stop_bytes = 2048;
+  const int stop_bytes = 4096;
 
   // Allocated variables
   char *send_data;
   char *recv_data;
 
-  int sendcounts[size];
-  int recvcounts[size];
-  int displs[size];
-
   // Warm-up loop
-  for (int count = start_bytes; count <= stop_bytes; count *= 2)
+  for (int i = 0; i < 5; i++)
   {
-    // Send and recieve buffers must be the same size
-    const int buffer_size = size * count;
-    send_data = new char[buffer_size];
-    recv_data = new char[buffer_size];
-
-    for (int i = 0; i < size; ++i)
+    for (int count = start_bytes; count <= stop_bytes; count *= 2)
     {
-      sendcounts[i] = count;
-      recvcounts[i] = count;
-      displs[i] = i * count;
-    }
-
-    for (int j = 0; j < 20; j++)
-    {
-      for (int j = 0; j < buffer_size; j++)
+      // Send and recieve buffers must be the same size
+      const int buffer_size = size * count;
+      send_data = new char[buffer_size];
+      recv_data = new char[buffer_size];
+      for (int j = 0; j < 20; j++)
       {
-        send_data[j] = rank % 64;
-        recv_data[j] = 0;
+        for (int j = 0; j < buffer_size; j++)
+        {
+          send_data[j] = rank % 64;
+          recv_data[j] = 0;
+        }
+        spreadout_alltoall(send_data, count, MPI_CHAR, recv_data, count, MPI_CHAR, MPI_COMM_WORLD);
       }
-      twophase_bruck_alltoallv(send_data, sendcounts, displs, MPI_CHAR, recv_data, recvcounts, displs, MPI_CHAR, MPI_COMM_WORLD);
     }
   }
 
+  std::ofstream log;
+  if (rank == 0)
+  {
+    std::ostringstream filename;
+    filename << size << "-proc-" << nodes << "-node-" << ppn << "-ppn.log";
+    log.open(filename.str(), std::ios_base::app);
+    log << "Spreadout,";
+  }
+
   // Benchmark loop
-  const int num_executions = 1000;
+  const int num_executions = 50;
   for (int count = start_bytes; count <= stop_bytes; count *= 2)
   {
     // Send and recieve buffers must be the same size
     const int buffer_size = size * count;
     send_data = new char[buffer_size];
     recv_data = new char[buffer_size];
-
-    for (int i = 0; i < size; ++i)
-    {
-      sendcounts[i] = count;
-      recvcounts[i] = count;
-      displs[i] = i * count;
-    }
 
     std::vector<float> times(num_executions);
     for (int j = 0; j < num_executions; j++)
@@ -87,7 +84,7 @@ int main(int argc, char **argv)
 
       // Perform all to all
       auto start = std::chrono::high_resolution_clock::now();
-      twophase_bruck_alltoallv(send_data, sendcounts, displs, MPI_CHAR, recv_data, recvcounts, displs, MPI_CHAR, MPI_COMM_WORLD);
+      spreadout_alltoall(send_data, count, MPI_CHAR, recv_data, count, MPI_CHAR, MPI_COMM_WORLD);
       auto stop = std::chrono::high_resolution_clock::now();
 
       // Compute elapsed time
@@ -113,16 +110,15 @@ int main(int argc, char **argv)
       }
       float average = sum / num_executions;
 
-      std::ofstream log;
-      log.open("run.log", std::ios_base::app);
-      log << "[MPI_Alltoallv] " << size << " processes sending " << count << " bytes each: " << average << " us avg of " << num_executions << " executions" << std::endl;
-      log.close();
+      log << average << ",";
     }
 
     // Free allocated memory
     delete[] send_data;
     delete[] recv_data;
   }
+  log << std::endl;
+  log.close();
 
   // Finalize MPI
   MPICHECK(MPI_Finalize());

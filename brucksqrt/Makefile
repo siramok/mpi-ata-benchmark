@@ -1,4 +1,4 @@
-TARGET = mpi-ata
+TARGET = brucksqrt
 COMMON = ../common
 SRC = $(TARGET).cpp
 

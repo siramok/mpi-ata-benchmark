@@ -1,4 +1,4 @@
-TARGET = mpi-ata-bruckv
+TARGET = bruck2
 COMMON = ../common
 SRC = $(TARGET).cpp
 
