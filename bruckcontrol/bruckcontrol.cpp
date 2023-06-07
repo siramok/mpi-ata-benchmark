@@ -58,15 +58,17 @@ int main(int argc, char **argv)
   if (rank == 0)
   {
     std::ostringstream filename;
-    filename << size << "-proc-" << nodes << "-node-" << ppn << "-ppn.log";
+    filename << size << "-proc-" << nodes << "-node-" << ppn << "-ppn-" << radix << "-radix.log";
     log.open(filename.str(), std::ios_base::app);
     log << "Bruckcontrol,";
   }
 
   // Benchmark loop
   const int num_executions = 50;
-  for (int count = start_bytes; count <= stop_bytes; count *= 2)
+  int byte_amounts[2] = {16, 256};
+  for (int i = 0; i < 2; i++)
   {
+    int count = byte_amounts[i];
     // Send and recieve buffers must be the same size
     const int buffer_size = size * count;
     send_data = new char[buffer_size];
