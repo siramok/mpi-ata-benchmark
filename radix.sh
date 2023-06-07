@@ -4,7 +4,8 @@
 # let N=`nproc`
 # let PPN=$(( N / 2 ))
 
-NODES=1
+# NODES=1
+NODES=`wc -l < $PBS_NODEFILE`
 PPN=(32 64)
 RADIX=(2 4 8 16 24 32 40 48 56 64 72 80 128 256 512 1024 2048 4096)
 
